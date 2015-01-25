@@ -14,11 +14,13 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.FileOutputStream;
+import java.net.SocketException;
 import java.text.DateFormat;
 import java.text.DateFormatSymbols;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Locale;
 
@@ -45,43 +47,48 @@ public class DateExtractor {
         fmt.setDateFormatSymbols(symbols);
 
 
+        Calendar calendar = new Calendar();
+        calendar.getProperties().add(new ProdId("-//Ben Fortuna//iCal4j 1.0//EN"));
+        calendar.getProperties().add(Version.VERSION_2_0);
+        calendar.getProperties().add(CalScale.GREGORIAN);
+
+        UidGenerator ug = new UidGenerator("1");
+
+
         List<Event> events = getEvents();
         //events .forEach(System.err::println);
         events.forEach(e -> {
             try {
-               System.err.println( fmt.parse(e.getDate()));
+
+                java.util.Calendar cal = java.util.Calendar.getInstance();
+
+                cal.setTime(fmt.parse(e.getDate()));
+                cal.set(java.util.Calendar.HOUR_OF_DAY, 9);
+                cal.set(java.util.Calendar.MINUTE, 0);
+                cal.set(java.util.Calendar.SECOND, 0);
+
+
+                // initialise as an all-day event..
+                VEvent event = new VEvent(new Date(cal.getTime()), new Date(cal.getTime()), e.getInfo());
+
+
+                // Generate a UID for the event..
+                event.getProperties().add(ug.generateUid());
+
+                calendar.getComponents().add(event);
+
+
             } catch (ParseException e1) {
                 e1.printStackTrace();
             }
         });
 
 
-
-
-/*
-        Calendar calendar = new Calendar();
-        calendar.getProperties().add(new ProdId("-//Ben Fortuna//iCal4j 1.0//EN"));
-        calendar.getProperties().add(Version.VERSION_2_0);
-        calendar.getProperties().add(CalScale.GREGORIAN);
-
-
-
-        // initialise as an all-day event..
-        VEvent christmas = new VEvent(new Date(d.getTime()), "Christmas Day");
-
-        // Generate a UID for the event..
-        UidGenerator ug = new UidGenerator("1");
-        christmas.getProperties().add(ug.generateUid());
-
-        net.fortuna.ical4j.model.Calendar cal = new net.fortuna.ical4j.model.Calendar();
-        cal.getComponents().add(christmas);
-
-
         FileOutputStream fout = new FileOutputStream("mycalendar.ics");
 
         CalendarOutputter outputter = new CalendarOutputter();
         outputter.output(calendar, fout);
-  */
+
     }
 
 
