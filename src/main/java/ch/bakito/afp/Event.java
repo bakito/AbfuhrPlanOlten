@@ -17,4 +17,12 @@ public class Event {
     public String toString() {
         return "Event: " + date + " / " + info;
     }
+
+    public String getDate() {
+        return date;
+    }
+
+    public String getInfo() {
+        return info;
+    }
 }
